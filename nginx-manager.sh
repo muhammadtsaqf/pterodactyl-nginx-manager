@@ -32,6 +32,7 @@ function reload_nginx() {
 function add_domain() {
     local DOMAIN=$1
     local PORT=$2
+    local TARGET_IP=${3:-127.0.0.1}
     local CONF_FILE="${NGINX_AVAILABLE_DIR}/${DOMAIN}.conf"
     local LINK_FILE="${NGINX_ENABLED_DIR}/${DOMAIN}.conf"
 
@@ -54,7 +55,7 @@ server {
     server_name ${DOMAIN};
 
     location / {
-        proxy_pass http://127.0.0.1:${PORT};
+        proxy_pass http://${TARGET_IP}:${PORT};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -115,8 +116,11 @@ function interactive_menu() {
             1)
                 echo ""
                 read -p "Masukkan nama domain (contoh: panel.domain.com): " input_domain
+                read -p "Masukkan IP target (biarkan kosong untuk 127.0.0.1): " input_ip
                 read -p "Masukkan port target (contoh: 8080): " input_port
-                add_domain "$input_domain" "$input_port"
+                
+                # Jika input_ip kosong, variabel ketiga akan tetap diteruskan (bash akan menggunakan default 127.0.0.1 di function)
+                add_domain "$input_domain" "$input_port" "$input_ip"
                 read -p "Tekan Enter untuk kembali ke menu..."
                 ;;
             2)
