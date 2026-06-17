@@ -101,6 +101,12 @@ function delete_domain() {
         exit 1
     fi
 
+    # Proteksi keamanan: jangan sampai user menghapus konfigurasi utama Pterodactyl
+    if [ "$DOMAIN" == "pterodactyl" ] || [ "$DOMAIN" == "default" ]; then
+        echo "Error: Anda tidak diizinkan menghapus konfigurasi utama sistem ($DOMAIN)!"
+        exit 1
+    fi
+
     if [ ! -f "$CONF_FILE" ]; then
         echo "Error: Configuration for $DOMAIN does not exist at $CONF_FILE"
         exit 1
@@ -123,8 +129,11 @@ function list_domains() {
         for file in "$NGINX_AVAILABLE_DIR"/*.conf; do
             if [ -f "$file" ]; then
                 local domain=$(basename "$file" .conf)
-                echo "- $domain"
-                count=$((count+1))
+                # Sembunyikan file penting agar tidak terlisting
+                if [ "$domain" != "pterodactyl" ] && [ "$domain" != "default" ]; then
+                    echo "- $domain"
+                    count=$((count+1))
+                fi
             fi
         done
     fi
