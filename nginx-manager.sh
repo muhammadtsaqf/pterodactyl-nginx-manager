@@ -121,10 +121,29 @@ function list_domains() {
 }
 
 function interactive_menu() {
+    clear
+    echo "Mendeteksi informasi server..."
+    IP_INFO=$(curl -sS --max-time 3 ipinfo.io)
+    if [ -n "$IP_INFO" ] && echo "$IP_INFO" | grep -q '"ip"'; then
+        SERVER_IP=$(echo "$IP_INFO" | grep '"ip"' | cut -d '"' -f 4)
+        SERVER_CITY=$(echo "$IP_INFO" | grep '"city"' | cut -d '"' -f 4)
+        SERVER_COUNTRY=$(echo "$IP_INFO" | grep '"country"' | cut -d '"' -f 4)
+        SERVER_ORG=$(echo "$IP_INFO" | grep '"org"' | cut -d '"' -f 4)
+    else
+        SERVER_IP=$(curl -sS --max-time 3 ifconfig.me || echo "127.0.0.1")
+        SERVER_CITY="Tidak diketahui"
+        SERVER_COUNTRY="Tidak diketahui"
+        SERVER_ORG="Tidak diketahui"
+    fi
+
     while true; do
         clear
         echo "========================================="
         echo "       Pterodactyl Domain Manager        "
+        echo "========================================="
+        echo " IP VPS    : $SERVER_IP"
+        echo " Lokasi    : $SERVER_CITY, $SERVER_COUNTRY"
+        echo " Provider  : $SERVER_ORG"
         echo "========================================="
         echo "1. Tambah Konfigurasi Domain"
         echo "2. Hapus Konfigurasi Domain"
@@ -136,12 +155,9 @@ function interactive_menu() {
         case $pilihan in
             1)
                 echo ""
-                echo "Mendeteksi IP VPS Anda..."
-                DETECTED_IP=$(curl -sS --max-time 3 ifconfig.me || echo "127.0.0.1")
-                
                 read -p "Masukkan nama domain (contoh: panel.domain.com): " input_domain
-                read -p "Masukkan IP target (biarkan kosong untuk $DETECTED_IP): " input_ip
-                input_ip=${input_ip:-$DETECTED_IP}
+                read -p "Masukkan IP target (biarkan kosong untuk $SERVER_IP): " input_ip
+                input_ip=${input_ip:-$SERVER_IP}
                 
                 read -p "Masukkan port target (contoh: 8080): " input_port
                 
