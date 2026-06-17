@@ -33,6 +33,8 @@ function add_domain() {
     local DOMAIN=$1
     local PORT=$2
     local TARGET_IP=${3:-127.0.0.1}
+    local USE_SSL=$4
+    local EMAIL=$5
     local CONF_FILE="${NGINX_AVAILABLE_DIR}/${DOMAIN}.conf"
     local LINK_FILE="${NGINX_ENABLED_DIR}/${DOMAIN}.conf"
 
@@ -74,6 +76,29 @@ EOF
 
     echo "Configuration created: $CONF_FILE"
     reload_nginx
+
+    if [[ "$USE_SSL" =~ ^[Yy]$ ]]; then
+        echo "Mengkonfigurasi SSL via Certbot..."
+        if ! command -v certbot &> /dev/null; then
+            echo "Menginstall certbot dan plugin nginx..."
+            apt-get update && apt-get install -y certbot python3-certbot-nginx
+        fi
+        
+        local certbot_cmd="certbot --nginx -d \"$DOMAIN\" --agree-tos --redirect"
+        if [ -n "$EMAIL" ]; then
+            certbot_cmd="$certbot_cmd -m \"$EMAIL\" --no-eff-email"
+        else
+            certbot_cmd="$certbot_cmd --register-unsafely-without-email"
+        fi
+        
+        eval $certbot_cmd
+        
+        if [ $? -eq 0 ]; then
+            echo "SSL (HTTPS) berhasil diaktifkan untuk $DOMAIN!"
+        else
+            echo "Gagal mengaktifkan SSL. Pastikan domain $DOMAIN sudah pointing (A Record) ke IP VPS ini dan DNS sudah terpropagasi."
+        fi
+    fi
 }
 
 function delete_domain() {
@@ -161,7 +186,13 @@ function interactive_menu() {
                 
                 read -p "Masukkan port target (contoh: 8080): " input_port
                 
-                add_domain "$input_domain" "$input_port" "$input_ip"
+                read -p "Gunakan SSL/HTTPS via Certbot? Pastikan domain sudah pointing ke IP ini (y/n): " use_ssl
+                local input_email=""
+                if [[ "$use_ssl" =~ ^[Yy]$ ]]; then
+                    read -p "Masukkan Email untuk notifikasi SSL (kosongkan jika tidak perlu): " input_email
+                fi
+                
+                add_domain "$input_domain" "$input_port" "$input_ip" "$use_ssl" "$input_email"
                 read -p "Tekan Enter untuk kembali ke menu..."
                 ;;
             2)
