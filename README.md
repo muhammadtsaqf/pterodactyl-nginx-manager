@@ -34,24 +34,7 @@ Setelah perintah dijalankan, Anda akan melihat menu seperti ini:
 Pilih menu [1-3]: 
 ```
 
----
 
-## 🐳 Menggunakan Docker (Opsional)
-
-Jika Anda ingin menjalankan Nginx ini di dalam container Docker, repositori ini sudah menyertakan `Dockerfile` dan GitHub Actions untuk otomatis mem-build image-nya.
-
-1. **Build Image (Secara Lokal):**
-   ```bash
-   docker build -t pterodactyl-nginx-manager .
-   ```
-2. **Jalankan Container:**
-   ```bash
-   docker run -d -p 80:80 --name nginx-proxy pterodactyl-nginx-manager
-   ```
-3. **Menggunakan Script dari Dalam Container:**
-   ```bash
-   docker exec -it nginx-proxy nginx-manager
-   ```
 
 ---
 

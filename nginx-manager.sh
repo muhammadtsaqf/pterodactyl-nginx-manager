@@ -100,6 +100,26 @@ function delete_domain() {
     reload_nginx
 }
 
+function list_domains() {
+    echo "========================================="
+    echo "       Daftar Domain Terdaftar           "
+    echo "========================================="
+    local count=0
+    if [ -d "$NGINX_AVAILABLE_DIR" ]; then
+        for file in "$NGINX_AVAILABLE_DIR"/*.conf; do
+            if [ -f "$file" ]; then
+                local domain=$(basename "$file" .conf)
+                echo "- $domain"
+                count=$((count+1))
+            fi
+        done
+    fi
+    if [ $count -eq 0 ]; then
+        echo "Belum ada domain yang terdaftar."
+    fi
+    echo "========================================="
+}
+
 function interactive_menu() {
     while true; do
         clear
@@ -108,18 +128,23 @@ function interactive_menu() {
         echo "========================================="
         echo "1. Tambah Konfigurasi Domain"
         echo "2. Hapus Konfigurasi Domain"
-        echo "3. Keluar"
+        echo "3. List Domain Terdaftar"
+        echo "4. Keluar"
         echo "========================================="
-        read -p "Pilih menu [1-3]: " pilihan
+        read -p "Pilih menu [1-4]: " pilihan
 
         case $pilihan in
             1)
                 echo ""
+                echo "Mendeteksi IP VPS Anda..."
+                DETECTED_IP=$(curl -sS --max-time 3 ifconfig.me || echo "127.0.0.1")
+                
                 read -p "Masukkan nama domain (contoh: panel.domain.com): " input_domain
-                read -p "Masukkan IP target (biarkan kosong untuk 127.0.0.1): " input_ip
+                read -p "Masukkan IP target (biarkan kosong untuk $DETECTED_IP): " input_ip
+                input_ip=${input_ip:-$DETECTED_IP}
+                
                 read -p "Masukkan port target (contoh: 8080): " input_port
                 
-                # Jika input_ip kosong, variabel ketiga akan tetap diteruskan (bash akan menggunakan default 127.0.0.1 di function)
                 add_domain "$input_domain" "$input_port" "$input_ip"
                 read -p "Tekan Enter untuk kembali ke menu..."
                 ;;
@@ -130,6 +155,11 @@ function interactive_menu() {
                 read -p "Tekan Enter untuk kembali ke menu..."
                 ;;
             3)
+                echo ""
+                list_domains
+                read -p "Tekan Enter untuk kembali ke menu..."
+                ;;
+            4)
                 echo "Keluar dari program."
                 exit 0
                 ;;
